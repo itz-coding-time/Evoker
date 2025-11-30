@@ -32,21 +32,24 @@ interface EvokerDao {
     @Query("SELECT * FROM messages WHERE content LIKE '%' || :query || '%' ORDER BY timestamp DESC LIMIT 100")
     suspend fun searchMessages(query: String): List<Message>
 
+    @Query("SELECT * FROM messages WHERE chatId IN (:chatIds) AND content LIKE '%' || :query || '%' ORDER BY timestamp ASC")
+    suspend fun searchMessagesInChat(chatIds: List<String>, query: String): List<Message>
+
     @Query("SELECT * FROM messages WHERE chatId IN (:chatIds) ORDER BY timestamp ASC")
     fun getMessagesForIds(chatIds: List<String>): Flow<List<Message>>
 
     @Query("SELECT tags FROM contacts WHERE tags != ''")
     suspend fun getAllTags(): List<String>
 
-    // --- STATISTICS QUERIES ---
-    @Query("SELECT COUNT(*) FROM messages")
-    fun getTotalMessageCount(): Flow<Int>
-
-    @Query("SELECT COUNT(*) FROM contacts")
-    fun getTotalContactCount(): Flow<Int>
-
-    @Query("SELECT * FROM contacts ORDER BY messageCount DESC LIMIT 5")
-    fun getTop5Contacts(): Flow<List<Contact>>
+    // --- STATISTICS QUERIES (MISSING IN YOUR FILE) ---
+//    @Query("SELECT COUNT(*) FROM messages")
+//    fun getTotalMessageCount(): Flow<Int>
+//
+//    @Query("SELECT COUNT(*) FROM contacts")
+//    fun getTotalContactCount(): Flow<Int>
+//
+//    @Query("SELECT * FROM contacts ORDER BY messageCount DESC LIMIT 5")
+//    fun getTop5Contacts(): Flow<List<Contact>>
 
     // Updates
     @Query("UPDATE contacts SET tags = :tags WHERE id = :id")

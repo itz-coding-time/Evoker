@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,8 +17,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -36,9 +39,6 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,7 +64,6 @@ fun EvokerApp(db: AppDatabase, importer: ZipImporter, settings: SettingsManager)
     var activeChatId by remember { mutableStateOf("") }
     var jumpToMsgId by remember { mutableStateOf<Long?>(null) }
 
-    // If drawer is open, back button closes it
     BackHandler(enabled = drawerState.isOpen) {
         scope.launch { drawerState.close() }
     }
@@ -80,14 +79,14 @@ fun EvokerApp(db: AppDatabase, importer: ZipImporter, settings: SettingsManager)
                     label = { Text("Dashboard") },
                     selected = currentScreen == "dashboard",
                     onClick = { currentScreen = "dashboard"; scope.launch { drawerState.close() } },
-                    icon = { Icon(Icons.Default.Home, null) },
+                    icon = { Icon(Icons.Default.PlayArrow, null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
                     label = { Text("Statistics") },
                     selected = currentScreen == "stats",
                     onClick = { currentScreen = "stats"; scope.launch { drawerState.close() } },
-                    icon = { Icon(Icons.Default.AccountCircle, null) },
+                    icon = { Icon(Icons.Default.Place, null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
@@ -110,52 +109,51 @@ fun EvokerApp(db: AppDatabase, importer: ZipImporter, settings: SettingsManager)
                 onOpenDrawer = { scope.launch { drawerState.open() } }
             )
             "settings" -> SettingsScreen(settings) { scope.launch { drawerState.open() } }
-            "stats" -> StatisticsScreen(db) { scope.launch { drawerState.open() } }
+            //"stats" -> StatisticsScreen(db) { scope.launch { drawerState.open() } }
             "chat" -> ChatScreen(db, activeChatId, jumpToMsgId, settings) { currentScreen = "dashboard" }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun StatisticsScreen(db: AppDatabase, onOpenDrawer: () -> Unit) {
-    val totalMsgs by db.dao().getTotalMessageCount().collectAsState(initial = 0)
-    val totalContacts by db.dao().getTotalContactCount().collectAsState(initial = 0)
-    val topContacts by db.dao().getTop5Contacts().collectAsState(initial = emptyList())
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun StatisticsScreen(db: AppDatabase, onOpenDrawer: () -> Unit) {
+//    val totalMsgs by db.dao().getTotalMessageCount().collectAsState(initial = 0)
+//    val totalContacts by db.dao().getTotalContactCount().collectAsState(initial = 0)
+//    val topContacts by db.dao().getTop5Contacts().collectAsState(initial = emptyList())
+//
+//    Scaffold(
+//        topBar = {
+//            TopAppBar(
+//                title = { Text("Statistics") },
+//                navigationIcon = { IconButton(onClick = onOpenDrawer) { Icon(Icons.Default.Menu, "Menu") } }
+//            )
+//        }
+//    ) { padding ->
+//        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
+//            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+//               StatCard("Total Messages", "$totalMsgs", Icons.Default.MailOutline, Modifier.weight(1f))
+//                StatCard("Total Contacts", "$totalContacts", Icons.Default.Person, Modifier.weight(1f))
+//            }
+//            Spacer(modifier = Modifier.height(24.dp))
+//            Text("Top Friends", style = MaterialTheme.typography.titleLarge)
+//            Spacer(modifier = Modifier.height(8.dp))
+//            LazyColumn {
+//                items(topContacts) { contact ->
+//                    ListItem(
+//                        headlineContent = { Text(contact.displayName) },
+//                        supportingContent = { Text("${contact.messageCount} messages") },
+//                        leadingContent = {
+//                            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
+//                                Text(contact.displayName.take(1))
+//                            }
+//                        }
+//                   )
+//                }
+//            }
+//        }
+//   }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Statistics") },
-                navigationIcon = { IconButton(onClick = onOpenDrawer) { Icon(Icons.Default.Menu, "Menu") } }
-            )
-        }
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
-            // Cards Row
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatCard("Total Messages", "$totalMsgs", Icons.Default.MailOutline, Modifier.weight(1f))
-                StatCard("Total Contacts", "$totalContacts", Icons.Default.Person, Modifier.weight(1f))
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-            Text("Top Friends", style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.height(8.dp))
-            LazyColumn {
-                items(topContacts) { contact ->
-                    ListItem(
-                        headlineContent = { Text(contact.displayName) },
-                        supportingContent = { Text("${contact.messageCount} messages") },
-                        leadingContent = {
-                            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
-                                Text(contact.displayName.take(1))
-                            }
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun StatCard(title: String, value: String, icon: ImageVector, modifier: Modifier = Modifier) {
@@ -197,7 +195,6 @@ fun DashboardScreen(db: AppDatabase, importer: ZipImporter, settings: SettingsMa
     var isImporting by remember { mutableStateOf(false) }
     var importStatus by remember { mutableStateOf("") }
 
-    // Smart Import Launcher (Uses Saved Aliases)
     val smartLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
             isImporting = true
@@ -209,7 +206,6 @@ fun DashboardScreen(db: AppDatabase, importer: ZipImporter, settings: SettingsMa
         }
     }
 
-    // Manual Import Launcher (Uses Typed Name)
     var pendingUsername by remember { mutableStateOf("") }
     val manualLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
@@ -226,7 +222,7 @@ fun DashboardScreen(db: AppDatabase, importer: ZipImporter, settings: SettingsMa
         topBar = {
             Column {
                 TopAppBar(
-                    title = { Text("Evoker v10") },
+                    title = { Text("Evoker v12") },
                     navigationIcon = { IconButton(onClick = onOpenDrawer) { Icon(Icons.Default.Menu, "Menu") } }
                 )
                 OutlinedTextField(
@@ -240,7 +236,6 @@ fun DashboardScreen(db: AppDatabase, importer: ZipImporter, settings: SettingsMa
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                // SMART LOGIC: If aliases exist, skip dialog.
                 if (myAliases.isNotEmpty()) {
                     smartLauncher.launch(arrayOf("application/zip", "application/json", "application/octet-stream"))
                 } else {
@@ -251,19 +246,28 @@ fun DashboardScreen(db: AppDatabase, importer: ZipImporter, settings: SettingsMa
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             if (searchQuery.isEmpty()) {
-                // STANDARD LIST
                 LazyColumn {
+                    // Standard List: Hides hidden contacts
                     items(contacts.filter { !it.isHidden }) { contact ->
                         ContactRow(contact) { onNavigateToChat(contact.id, null) }
                     }
                 }
             } else {
-                // COLLAPSIBLE SEARCH RESULTS
                 LazyColumn {
-                    // 1. Contacts
-                    val matchedContacts = contacts.filter {
-                        it.displayName.contains(searchQuery, true) || it.nickname?.contains(searchQuery, true) == true
+                    // SMART SEARCH LOGIC:
+                    // 1. Matches Name/Nickname
+                    // 2. Matches Tags
+                    // 3. Matches MERGED IDs (The "Kay" Logic)
+                    // 4. Excludes contacts that are explicitly hidden (unless they are the Parent of a merged match)
+
+                    val matchedContacts = contacts.filter { contact ->
+                        if (contact.isHidden) return@filter false
+
+                        contact.displayName.contains(searchQuery, true) ||
+                                contact.nickname?.contains(searchQuery, true) == true ||
+                                contact.mergedWith.contains(searchQuery, true) // <--- Checks if a merged ghost ID matches
                     }
+
                     if (matchedContacts.isNotEmpty()) {
                         item { SectionHeader("Contacts (${matchedContacts.size})", showContacts) { showContacts = !showContacts } }
                         if (showContacts) {
@@ -271,8 +275,7 @@ fun DashboardScreen(db: AppDatabase, importer: ZipImporter, settings: SettingsMa
                         }
                     }
 
-                    // 2. Tags
-                    val matchedTags = contacts.filter { it.tags.contains(searchQuery, true) }
+                    val matchedTags = contacts.filter { !it.isHidden && it.tags.contains(searchQuery, true) }
                     if (matchedTags.isNotEmpty()) {
                         item { SectionHeader("Tags (${matchedTags.size})", showTags) { showTags = !showTags } }
                         if (showTags) {
@@ -280,7 +283,6 @@ fun DashboardScreen(db: AppDatabase, importer: ZipImporter, settings: SettingsMa
                         }
                     }
 
-                    // 3. Messages
                     if (messageResults.isNotEmpty()) {
                         item { SectionHeader("Messages (${messageResults.size})", showMessages) { showMessages = !showMessages } }
                         if (showMessages) {
@@ -291,7 +293,6 @@ fun DashboardScreen(db: AppDatabase, importer: ZipImporter, settings: SettingsMa
                     }
                 }
             }
-            // THE NEW BLOCKER
             if (isImporting) {
                 ProcessingOverlay(status = importStatus)
             }
@@ -304,11 +305,9 @@ fun DashboardScreen(db: AppDatabase, importer: ZipImporter, settings: SettingsMa
             title = { Text("Who are you?") },
             text = {
                 Column {
-                    Text("We don't know your username yet. Enter it here to identify your messages.", fontSize = 12.sp)
+                    Text("Enter your username.", fontSize = 12.sp)
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(value = pendingUsername, onValueChange = { pendingUsername = it }, label = { Text("Username") })
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Tip: Add usernames in Settings to skip this.", fontSize = 10.sp, color = Color.Gray)
                 }
             },
             confirmButton = {
@@ -356,7 +355,6 @@ fun SettingsScreen(settings: SettingsManager, onOpenDrawer: () -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
         Text("My Personas (Usernames)", style = MaterialTheme.typography.titleMedium)
-        Text("Add all your usernames (Insta, Snap, etc.) here. The app will use these to identify 'You' during import.", fontSize = 12.sp, color = Color.Gray)
 
         Row(modifier = Modifier.padding(vertical = 8.dp)) {
             OutlinedTextField(value = newAlias, onValueChange = { newAlias = it }, modifier = Modifier.weight(1f), placeholder = { Text("e.g. bcasefire") }, singleLine = true)
@@ -418,21 +416,17 @@ fun ChatScreen(db: AppDatabase, chatId: String, jumpToMsgId: Long?, settings: Se
     val messages by db.dao().getMessagesForIds(allChatIds).collectAsState(initial = emptyList())
     val listState = rememberLazyListState()
 
-    // FILTER LOGIC
     var isSearchMode by remember { mutableStateOf(false) }
     var inChatQuery by remember { mutableStateOf("") }
     var smartFilterEnabled by remember { mutableStateOf(false) }
 
-    // --- SELECTION STATE ---
     var selectedMessageIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
-    var selectionStartId by remember { mutableStateOf<Long?>(null) } // For range select
+    var selectionStartId by remember { mutableStateOf<Long?>(null) }
 
-    // --- AI STATE ---
     var showAiDialog by remember { mutableStateOf(false) }
     var aiResult by remember { mutableStateOf("") }
     var isGeneratingAi by remember { mutableStateOf(false) }
 
-    // 1. First Pass: Apply Smart Filter
     val filteredMessages = remember(messages, smartFilterEnabled) {
         messages.filter { msg ->
             if (smartFilterEnabled) {
@@ -443,7 +437,6 @@ fun ChatScreen(db: AppDatabase, chatId: String, jumpToMsgId: Long?, settings: Se
         }
     }
 
-    // 2. Second Pass: Search Matching
     val searchMatches = remember(filteredMessages, inChatQuery) {
         if (inChatQuery.isEmpty()) emptyList()
         else filteredMessages.mapIndexedNotNull { index, msg ->
@@ -453,7 +446,6 @@ fun ChatScreen(db: AppDatabase, chatId: String, jumpToMsgId: Long?, settings: Se
 
     var currentMatchIndex by remember { mutableStateOf(-1) }
 
-    // JUMP LOGIC
     LaunchedEffect(filteredMessages, jumpToMsgId) {
         if (jumpToMsgId != null && filteredMessages.isNotEmpty()) {
             val index = filteredMessages.indexOfFirst { it.id == jumpToMsgId }
@@ -470,6 +462,20 @@ fun ChatScreen(db: AppDatabase, chatId: String, jumpToMsgId: Long?, settings: Se
         if (newIndex < 0) newIndex = searchMatches.size - 1
         currentMatchIndex = newIndex
         scope.launch { listState.scrollToItem(searchMatches[newIndex]) }
+    }
+
+    fun copyForSpicyChat() {
+        val selectedMsgs = filteredMessages.filter { it.id in selectedMessageIds }.sortedBy { it.timestamp }
+        val transcript = selectedMsgs.joinToString("\n") { msg ->
+            val sender = if(msg.isFromMe) "{{user}}" else "{{char}}"
+            "$sender: ${msg.content}"
+        }
+        val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        val clip = android.content.ClipData.newPlainText("SpicyChat Dialog", transcript)
+        clipboard.setPrimaryClip(clip)
+        Toast.makeText(context, "Copied for SpicyChat!", Toast.LENGTH_SHORT).show()
+        selectedMessageIds = emptySet()
+        selectionStartId = null
     }
 
     var showActionMenu by remember { mutableStateOf(false) }
@@ -489,13 +495,12 @@ fun ChatScreen(db: AppDatabase, chatId: String, jumpToMsgId: Long?, settings: Se
     Scaffold(
         topBar = {
             if (selectedMessageIds.isNotEmpty()) {
-                // SELECTION MODE TOP BAR
                 TopAppBar(
                     title = { Text("${selectedMessageIds.size} Selected") },
                     navigationIcon = { IconButton(onClick = { selectedMessageIds = emptySet(); selectionStartId = null }) { Icon(Icons.Default.Close, "Clear") } },
                     actions = {
+                        IconButton(onClick = { copyForSpicyChat() }) { Icon(Icons.Default.Notifications, "Copy") }
                         IconButton(onClick = {
-                            // AI ANALYZE SELECTED
                             val selectedMsgs = filteredMessages.filter { it.id in selectedMessageIds }.sortedBy { it.timestamp }
                             val transcript = selectedMsgs.joinToString("\n") { msg ->
                                 val sender = if(msg.isFromMe) "Me" else (contact?.displayName ?: "Them")
@@ -503,7 +508,7 @@ fun ChatScreen(db: AppDatabase, chatId: String, jumpToMsgId: Long?, settings: Se
                             }
                             isGeneratingAi = true
                             showAiDialog = true
-                            selectedMessageIds = emptySet() // Clear after sending
+                            selectedMessageIds = emptySet()
                             selectionStartId = null
                             scope.launch {
                                 val repo = GeminiRepository(settings.getApiKey())
@@ -515,7 +520,6 @@ fun ChatScreen(db: AppDatabase, chatId: String, jumpToMsgId: Long?, settings: Se
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
                 )
             } else if (isSearchMode) {
-                // SEARCH BAR MODE
                 TopAppBar(
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -534,7 +538,6 @@ fun ChatScreen(db: AppDatabase, chatId: String, jumpToMsgId: Long?, settings: Se
                     navigationIcon = { IconButton(onClick = { isSearchMode = false; inChatQuery = "" }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } }
                 )
             } else {
-                // NORMAL MODE
                 TopAppBar(
                     title = {
                         Column {
@@ -558,6 +561,24 @@ fun ChatScreen(db: AppDatabase, chatId: String, jumpToMsgId: Long?, settings: Se
                             DropdownMenuItem(text = { Text("Edit Tags") }, onClick = { showTagDialog = true; showActionMenu = false })
                             DropdownMenuItem(text = { Text("Link Account") }, onClick = { showMergePicker = true; showActionMenu = false })
                             DropdownMenuItem(text = { Text("Info") }, onClick = { showContactInfo = true; showActionMenu = false })
+                            DropdownMenuItem(
+                                text = { Text("Analyze Last 200 (AI)") },
+                                onClick = {
+                                    showActionMenu = false
+                                    val transcript = messages.takeLast(200).joinToString("\n") { msg ->
+                                        val sender = if(msg.isFromMe) "Me" else (contact?.displayName ?: "Them")
+                                        "$sender: ${msg.content}"
+                                    }
+                                    isGeneratingAi = true
+                                    showAiDialog = true
+                                    scope.launch {
+                                        val repo = GeminiRepository(settings.getApiKey())
+                                        aiResult = repo.generatePersona(transcript)
+                                        isGeneratingAi = false
+                                    }
+                                },
+                                leadingIcon = { Icon(Icons.Default.Person, null) }
+                            )
                             DropdownMenuItem(
                                 text = { Text(if (contact?.isPinned == true) "Unpin" else "Pin") },
                                 onClick = { scope.launch { db.dao().setPinned(chatId, !(contact?.isPinned ?: false)) }; showActionMenu = false }
@@ -584,21 +605,16 @@ fun ChatScreen(db: AppDatabase, chatId: String, jumpToMsgId: Long?, settings: Se
                     activeHighlight = isCurrentMatch,
                     isSelected = isSelected,
                     onLongClick = {
-                        // Start Selection Mode
                         selectedMessageIds = setOf(msg.id)
                         selectionStartId = msg.id
                     },
                     onClick = {
                         if (selectedMessageIds.isNotEmpty()) {
-                            // In Selection Mode
                             if (selectedMessageIds.contains(msg.id)) {
-                                // Deselect single
                                 selectedMessageIds = selectedMessageIds - msg.id
                                 if (selectedMessageIds.isEmpty()) selectionStartId = null
                             } else {
-                                // Range Select
                                 if (selectionStartId != null) {
-                                    // Find range indices
                                     val startIdx = filteredMessages.indexOfFirst { it.id == selectionStartId }
                                     val endIdx = index
                                     if (startIdx != -1) {
@@ -606,7 +622,7 @@ fun ChatScreen(db: AppDatabase, chatId: String, jumpToMsgId: Long?, settings: Se
                                         val max = maxOf(startIdx, endIdx)
                                         val rangeIds = filteredMessages.subList(min, max + 1).map { it.id }
                                         selectedMessageIds = selectedMessageIds + rangeIds
-                                        selectionStartId = msg.id // Update anchor
+                                        selectionStartId = msg.id
                                     }
                                 } else {
                                     selectedMessageIds = selectedMessageIds + msg.id
@@ -619,8 +635,6 @@ fun ChatScreen(db: AppDatabase, chatId: String, jumpToMsgId: Long?, settings: Se
         }
     }
 
-    // ... (Dialogs remain the same) ...
-    // --- AI RESULT DIALOG ---
     if (showAiDialog) {
         AlertDialog(
             onDismissRequest = { if(!isGeneratingAi) showAiDialog = false },
@@ -638,12 +652,7 @@ fun ChatScreen(db: AppDatabase, chatId: String, jumpToMsgId: Long?, settings: Se
                     }
                 }
             },
-            confirmButton = {
-                TextButton(
-                    onClick = { showAiDialog = false },
-                    enabled = !isGeneratingAi
-                ) { Text("Close") }
-            }
+            confirmButton = { TextButton(onClick = { showAiDialog = false }, enabled = !isGeneratingAi) { Text("Close") } }
         )
     }
 
@@ -689,6 +698,19 @@ fun ChatScreen(db: AppDatabase, chatId: String, jumpToMsgId: Long?, settings: Se
 @Composable
 fun ContactRow(contact: Contact, onClick: () -> Unit) {
     val isMergedParent = contact.mergedWith.isNotEmpty()
+    val tagList = contact.tags.split(",").filter { it.isNotBlank() }
+
+    fun getTagColor(tag: String): Color {
+        val hash = tag.hashCode()
+        return when (Math.abs(hash) % 5) {
+            0 -> Color(0xFFE1BEE7) // Purple
+            1 -> Color(0xFFBBDEFB) // Blue
+            2 -> Color(0xFFC8E6C9) // Green
+            3 -> Color(0xFFFFCCBC) // Orange
+            else -> Color(0xFFCFD8DC) // Grey
+        }
+    }
+
     Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(16.dp).background(if(contact.isHidden) Color.LightGray.copy(alpha=0.1f) else Color.Transparent), verticalAlignment = Alignment.CenterVertically) {
         Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(if(isMergedParent) Color(0xFFE0B0FF) else MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
             Text(contact.displayName.take(1).uppercase(), fontWeight = FontWeight.Bold)
@@ -701,13 +723,15 @@ fun ContactRow(contact: Contact, onClick: () -> Unit) {
                 if (isMergedParent) Icon(Icons.Default.Share, "Merged", modifier = Modifier.size(14.dp), tint = Color.Magenta)
             }
             if (contact.nickname != null) Text("(${contact.displayName})", fontSize = 10.sp, color = Color.Gray)
-            if (contact.tags.isNotEmpty()) {
+
+            if (tagList.isNotEmpty()) {
                 Row(modifier = Modifier.padding(top = 2.dp)) {
-                    contact.tags.split(",").filter { it.isNotBlank() }.forEach { tag ->
-                        Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(4.dp), modifier = Modifier.padding(end = 4.dp)) {
-                            Text(tag, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
+                    tagList.take(3).forEach { tag ->
+                        Surface(color = getTagColor(tag), shape = RoundedCornerShape(4.dp), modifier = Modifier.padding(end = 4.dp)) {
+                            Text(tag.trim(), fontSize = 10.sp, color = Color.Black, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
                         }
                     }
+                    if(tagList.size > 3) Text("+${tagList.size-3}", fontSize=10.sp, color=Color.Gray)
                 }
             }
         }
@@ -725,9 +749,8 @@ fun MessageBubble(
     onClick: () -> Unit = {}
 ) {
     val isMe = message.isFromMe
-    // Selection Color Override
     val bgColor = when {
-        isSelected -> MaterialTheme.colorScheme.tertiaryContainer // Selected state color
+        isSelected -> MaterialTheme.colorScheme.tertiaryContainer
         activeHighlight -> Color(0xFFFFD700)
         highlight -> Color(0xFFFFFACD)
         isMe -> MaterialTheme.colorScheme.primary
@@ -740,16 +763,7 @@ fun MessageBubble(
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            // Add Combined Clickable to the Wrapper for long-press support
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick
-            ),
-        horizontalAlignment = if (isMe) Alignment.End else Alignment.Start
-    ) {
+    Column(modifier = Modifier.fillMaxWidth().combinedClickable(onClick = onClick, onLongClick = onLongClick), horizontalAlignment = if (isMe) Alignment.End else Alignment.Start) {
         if (message.platform.isNotEmpty()) {
             Text(text = message.platform.uppercase(), fontSize = 8.sp, color = Color.LightGray, modifier = Modifier.padding(horizontal = 4.dp))
         }
@@ -767,6 +781,7 @@ fun MessageBubble(
         }
     }
 }
+
 @Composable
 fun ProcessingOverlay(status: String) {
     Box(
