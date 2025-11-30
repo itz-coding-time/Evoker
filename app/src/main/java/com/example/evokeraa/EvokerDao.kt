@@ -17,6 +17,18 @@ interface EvokerDao {
     @Query("SELECT * FROM contacts ORDER BY isPinned DESC, messageCount DESC")
     fun getAllContacts(): Flow<List<Contact>>
 
+    // NEW: Smart Search (Checks Name, Nickname, Tags, AND Merged IDs)
+    @Query("""
+        SELECT * FROM contacts 
+        WHERE (displayName LIKE '%' || :query || '%' 
+        OR nickname LIKE '%' || :query || '%' 
+        OR tags LIKE '%' || :query || '%' 
+        OR mergedWith LIKE '%' || :query || '%')
+        AND isHidden = 0
+        ORDER BY isPinned DESC, messageCount DESC
+    """)
+    fun searchContacts(query: String): Flow<List<Contact>>
+
     @Query("SELECT * FROM messages WHERE content LIKE '%' || :query || '%' ORDER BY timestamp DESC LIMIT 100")
     suspend fun searchMessages(query: String): List<Message>
 
