@@ -114,7 +114,8 @@ fun EvokerApp(db: AppDatabase, importer: ZipImporter, settings: SettingsManager)
         }
     }
 }
-
+//Stats Page is Broken, uncommenting it causes non compiling code. ):
+//To fix later.
 //@OptIn(ExperimentalMaterial3Api::class)
 //@Composable
 //fun StatisticsScreen(db: AppDatabase, onOpenDrawer: () -> Unit) {
@@ -155,17 +156,17 @@ fun EvokerApp(db: AppDatabase, importer: ZipImporter, settings: SettingsManager)
 //   }
 
 
-@Composable
-fun StatCard(title: String, value: String, icon: ImageVector, modifier: Modifier = Modifier) {
-    Card(modifier = modifier) {
-        Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(value, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-            Text(title, style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
+//@Composable
+//fun StatCard(title: String, value: String, icon: ImageVector, modifier: Modifier = Modifier) {
+//    Card(modifier = modifier) {
+//        Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+//            Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
+//            Spacer(modifier = Modifier.height(8.dp))
+//            Text(value, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+//            Text(title, style = MaterialTheme.typography.bodySmall)
+//        }
+//    }
+//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
