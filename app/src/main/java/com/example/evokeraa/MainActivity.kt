@@ -79,14 +79,14 @@ fun EvokerApp(db: AppDatabase, importer: ZipImporter, settings: SettingsManager)
                     label = { Text("Dashboard") },
                     selected = currentScreen == "dashboard",
                     onClick = { currentScreen = "dashboard"; scope.launch { drawerState.close() } },
-                    icon = { Icon(Icons.Default.PlayArrow, null) },
+                    icon = { Icon(Icons.Default.Home, null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
                     label = { Text("Statistics") },
                     selected = currentScreen == "stats",
                     onClick = { currentScreen = "stats"; scope.launch { drawerState.close() } },
-                    icon = { Icon(Icons.Default.Place, null) },
+                    icon = { Icon(Icons.Default.BarChart, null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
@@ -109,64 +109,62 @@ fun EvokerApp(db: AppDatabase, importer: ZipImporter, settings: SettingsManager)
                 onOpenDrawer = { scope.launch { drawerState.open() } }
             )
             "settings" -> SettingsScreen(settings) { scope.launch { drawerState.open() } }
-            //"stats" -> StatisticsScreen(db) { scope.launch { drawerState.open() } }
+            "stats" -> StatisticsScreen(db) { scope.launch { drawerState.open() } }
             "chat" -> ChatScreen(db, activeChatId, jumpToMsgId, settings) { currentScreen = "dashboard" }
         }
     }
 }
-//Stats Page is Broken, uncommenting it causes non compiling code. ):
-//To fix later.
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun StatisticsScreen(db: AppDatabase, onOpenDrawer: () -> Unit) {
-//    val totalMsgs by db.dao().getTotalMessageCount().collectAsState(initial = 0)
-//    val totalContacts by db.dao().getTotalContactCount().collectAsState(initial = 0)
-//    val topContacts by db.dao().getTop5Contacts().collectAsState(initial = emptyList())
-//
-//    Scaffold(
-//        topBar = {
-//            TopAppBar(
-//                title = { Text("Statistics") },
-//                navigationIcon = { IconButton(onClick = onOpenDrawer) { Icon(Icons.Default.Menu, "Menu") } }
-//            )
-//        }
-//    ) { padding ->
-//        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
-//            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-//               StatCard("Total Messages", "$totalMsgs", Icons.Default.MailOutline, Modifier.weight(1f))
-//                StatCard("Total Contacts", "$totalContacts", Icons.Default.Person, Modifier.weight(1f))
-//            }
-//            Spacer(modifier = Modifier.height(24.dp))
-//            Text("Top Friends", style = MaterialTheme.typography.titleLarge)
-//            Spacer(modifier = Modifier.height(8.dp))
-//            LazyColumn {
-//                items(topContacts) { contact ->
-//                    ListItem(
-//                        headlineContent = { Text(contact.displayName) },
-//                        supportingContent = { Text("${contact.messageCount} messages") },
-//                        leadingContent = {
-//                            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
-//                                Text(contact.displayName.take(1))
-//                            }
-//                        }
-//                   )
-//                }
-//            }
-//        }
-//   }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StatisticsScreen(db: AppDatabase, onOpenDrawer: () -> Unit) {
+    val totalMsgs by db.dao().getTotalMessageCount().collectAsState(initial = 0)
+    val totalContacts by db.dao().getTotalContactCount().collectAsState(initial = 0)
+    val topContacts by db.dao().getTop5Contacts().collectAsState(initial = emptyList())
 
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Statistics") },
+                navigationIcon = { IconButton(onClick = onOpenDrawer) { Icon(Icons.Default.Menu, "Menu") } }
+            )
+        }
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                StatCard("Total Messages", "$totalMsgs", Icons.Default.Email, Modifier.weight(1f))
+                StatCard("Total Contacts", "$totalContacts", Icons.Default.Person, Modifier.weight(1f))
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Text("Top Friends", style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.height(8.dp))
+            LazyColumn {
+                items(topContacts) { contact ->
+                    ListItem(
+                        headlineContent = { Text(contact.displayName) },
+                        supportingContent = { Text("${contact.messageCount} messages") },
+                        leadingContent = {
+                            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
+                                Text(contact.displayName.take(1))
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
 
-//@Composable
-//fun StatCard(title: String, value: String, icon: ImageVector, modifier: Modifier = Modifier) {
-//    Card(modifier = modifier) {
-//        Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-//            Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
-//            Spacer(modifier = Modifier.height(8.dp))
-//            Text(value, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-//            Text(title, style = MaterialTheme.typography.bodySmall)
-//        }
-//    }
-//}
+@Composable
+fun StatCard(title: String, value: String, icon: ImageVector, modifier: Modifier = Modifier) {
+    Card(modifier = modifier) {
+        Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(value, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+            Text(title, style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -276,7 +274,8 @@ fun DashboardScreen(db: AppDatabase, importer: ZipImporter, settings: SettingsMa
                         }
                     }
 
-                    val matchedTags = contacts.filter { !it.isHidden && it.tags.contains(searchQuery, true) }
+                    val matchedContactIds = matchedContacts.map { it.id }.toSet()
+                    val matchedTags = contacts.filter { !it.isHidden && it.id !in matchedContactIds && it.tags.contains(searchQuery, true) }
                     if (matchedTags.isNotEmpty()) {
                         item { SectionHeader("Tags (${matchedTags.size})", showTags) { showTags = !showTags } }
                         if (showTags) {
@@ -500,7 +499,7 @@ fun ChatScreen(db: AppDatabase, chatId: String, jumpToMsgId: Long?, settings: Se
                     title = { Text("${selectedMessageIds.size} Selected") },
                     navigationIcon = { IconButton(onClick = { selectedMessageIds = emptySet(); selectionStartId = null }) { Icon(Icons.Default.Close, "Clear") } },
                     actions = {
-                        IconButton(onClick = { copyForSpicyChat() }) { Icon(Icons.Default.Notifications, "Copy") }
+                        IconButton(onClick = { copyForSpicyChat() }) { Icon(Icons.Default.ContentCopy, "Copy") }
                         IconButton(onClick = {
                             val selectedMsgs = filteredMessages.filter { it.id in selectedMessageIds }.sortedBy { it.timestamp }
                             val transcript = selectedMsgs.joinToString("\n") { msg ->

@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EvokerDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertContact(contact: Contact)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -41,15 +41,14 @@ interface EvokerDao {
     @Query("SELECT tags FROM contacts WHERE tags != ''")
     suspend fun getAllTags(): List<String>
 
-    // --- STATISTICS QUERIES (MISSING IN YOUR FILE) ---
-//    @Query("SELECT COUNT(*) FROM messages")
-//    fun getTotalMessageCount(): Flow<Int>
-//
-//    @Query("SELECT COUNT(*) FROM contacts")
-//    fun getTotalContactCount(): Flow<Int>
-//
-//    @Query("SELECT * FROM contacts ORDER BY messageCount DESC LIMIT 5")
-//    fun getTop5Contacts(): Flow<List<Contact>>
+    @Query("SELECT COUNT(*) FROM messages")
+    fun getTotalMessageCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM contacts WHERE isHidden = 0")
+    fun getTotalContactCount(): Flow<Int>
+
+    @Query("SELECT * FROM contacts WHERE isHidden = 0 ORDER BY messageCount DESC LIMIT 5")
+    fun getTop5Contacts(): Flow<List<Contact>>
 
     // Updates
     @Query("UPDATE contacts SET tags = :tags WHERE id = :id")
